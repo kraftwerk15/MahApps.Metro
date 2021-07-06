@@ -7,16 +7,17 @@
         <RootNamespace>MahApps.Metro</RootNamespace>
         <DefaultItemExcludes>$(DefaultItemExcludes);**\*.Template.xaml</DefaultItemExcludes>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <DefineConstants>$(DefineConstants);INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
     </PropertyGroup>
 
-    <ItemGroup Condition=" $(TargetFramework.StartsWith('net4')) ">
+    <ItemGroup Condition="$(DefineConstants.Contains(NETCOREAPP)) == false">
         <Reference Include="System.ComponentModel.DataAnnotations" />
         <Reference Include="System.Configuration" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="ControlzEx" version="4.3.*" />
-        <PackageReference Include="XamlColorSchemeGenerator" version="4-*" PrivateAssets="All" IIncludeAssets="build" />
+        <PackageReference Include="ControlzEx" version="5.*" />
+        <PackageReference Include="XamlColorSchemeGenerator" version="4.0.0-rc0155" PrivateAssets="all" IncludeAssets="build" />
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.*">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -27,26 +28,38 @@
     <ItemGroup>
         <EmbeddedResource Include="**\*.Template.xaml" />
         <EmbeddedResource Include="**\GeneratorParameters.json" />
+        <None Remove="Assets\Eyedropper.cur" />
+        <Resource Include="Assets\Eyedropper.cur" />
+        <None Include="VisualStudioToolsManifest.xml" Pack="true" PackagePath="tools" />
+        <UpToDateCheckInput Include="**/*.xaml" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="VisualStudioToolsManifest.xml" Pack="true" PackagePath="tools" />
+        <Compile Update="Lang\ColorNames.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>ColorNames.resx</DependentUpon>
+        </Compile>
+        <EmbeddedResource Update="Lang\ColorNames.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>ColorNames.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
     </ItemGroup>
 
-    <Target Name="GenerateXamlFiles" BeforeTargets="DispatchToInnerBuilds">
-        <PropertyGroup>
-            <XamlCombinePath>$(MSBuildProjectDirectory)/Themes/XamlCombine.exe</XamlCombinePath>
-            <!-- <XamlCombinePath>C:/DEV/OSS_Own/FluentRibbon/XamlCombine/bin/Debug/netcoreapp3.0/XamlCombine.exe</XamlCombinePath> -->
-        </PropertyGroup>       
-        <!-- Generate theme files -->
-        <Message Text="$(XamlColorSchemeGeneratorExecutable)" />
-        <Exec Command="&quot;$(XamlColorSchemeGeneratorExecutable)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)/Styles/Themes" />
-        <!-- Combine xaml files -->
-        <!-- <Exec Command="&quot;$(XamlCombinePath)&quot; &quot;Styles.txt&quot; &quot;Styles.xaml&quot;" WorkingDirectory="$(MSBuildProjectDirectory)/Themes" /> -->
+    <!-- Generate theme files -->
+    <Target Name="GenerateXamlFiles" BeforeTargets="DispatchToInnerBuilds;PrepareForBuild" Condition=" '$(IsBuildingWpfTempProj)' != 'true' and '$(XamlColorSchemeGeneratorExecutable)' != '' ">
+	    <Message Text="Generating XAML Color Scheme files... $(XamlColorSchemeGeneratorExecutable)" Importance="high" />
+	    <Exec Command="&quot;$(XamlColorSchemeGeneratorExecutable)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)/Styles/Themes" />
     </Target>
 
-    <!-- <ItemGroup> -->
-    <!--     <Compile DependentUpon="%(Filename)" SubType="Code" Update="**\obj\**\*.g$(DefaultLanguageSourceExtension)" /> -->
-    <!--     <Compile DependentUpon="%(Filename)" SubType="Designer" Update="**\*.xaml$(DefaultLanguageSourceExtension)" /> -->
-    <!-- </ItemGroup> -->
+    <!-- Delete generated XAML files when user explicitly executes Clean build. -->
+    <Target Name="CleanGenerateXamlFiles" AfterTargets="Clean">
+	    <ItemGroup>
+		    <ThemeFiles Include="$(MSBuildProjectDirectory)/Styles/Themes/Dark.*.xaml" />
+		    <ThemeFiles Include="$(MSBuildProjectDirectory)/Styles/Themes/Light.*.xaml" />
+	    </ItemGroup>
+	    <Message Text="Deleting XAML Color Scheme files..." Importance="high" />
+	    <Delete Files="@(ThemeFiles)" ContinueOnError="true" />
+    </Target>
+
 </Project>

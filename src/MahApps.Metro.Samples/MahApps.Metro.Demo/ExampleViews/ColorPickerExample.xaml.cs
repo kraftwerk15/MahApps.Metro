@@ -4,16 +4,16 @@
 
 using System.Windows.Controls;
 
-namespace MahApps.Metro.Controls
+namespace MetroDemo.ExampleViews
 {
     /// <summary>
-    /// Represents the base class for an icon UI element.
+    /// Interaction logic for ColorPickerExample.xaml
     /// </summary>
-    public abstract class IconElement : Control
+    public partial class ColorPickerExample : UserControl
     {
-        protected IconElement()
+        public ColorPickerExample()
         {
-            // nothing here
+            this.InitializeComponent();
         }
     }
 }

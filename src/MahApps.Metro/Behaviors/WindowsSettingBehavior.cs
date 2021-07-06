@@ -30,12 +30,12 @@ namespace MahApps.Metro.Behaviors
             base.OnDetaching();
         }
 
-        private void AssociatedObject_SourceInitialized(object sender, EventArgs e)
+        private void AssociatedObject_SourceInitialized(object? sender, EventArgs e)
         {
             this.LoadWindowState();
 
             var window = this.AssociatedObject;
-            if (null == window)
+            if (window is null)
             {
                 // if the associated object is null at this point, then there is really something wrong!
                 Trace.TraceError($"{this}: Can not attach to nested events, cause the AssociatedObject is null.");
@@ -46,26 +46,32 @@ namespace MahApps.Metro.Behaviors
             window.Closing += this.AssociatedObject_Closing;
             window.Closed += this.AssociatedObject_Closed;
 
-            // This operation must be thread safe
-            Application.Current?.Invoke(() => Application.Current.SessionEnding += this.CurrentApplicationSessionEnding);
+            // This operation must be thread safe. It is possible, that the window is running in a different Thread.
+            Application.Current?.BeginInvoke(app =>
+                {
+                    if (app != null)
+                    {
+                        app.SessionEnding += this.CurrentApplicationSessionEnding;
+                    }
+                });
         }
 
-        private void AssociatedObject_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void AssociatedObject_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
             this.SaveWindowState();
         }
 
-        private void AssociatedObject_Closed(object sender, EventArgs e)
+        private void AssociatedObject_Closed(object? sender, EventArgs e)
         {
             this.CleanUp("from AssociatedObject closed event");
         }
 
-        private void CurrentApplicationSessionEnding(object sender, SessionEndingCancelEventArgs e)
+        private void CurrentApplicationSessionEnding(object? sender, SessionEndingCancelEventArgs e)
         {
             this.SaveWindowState();
         }
 
-        private void AssociatedObject_StateChanged(object sender, EventArgs e)
+        private void AssociatedObject_StateChanged(object? sender, EventArgs e)
         {
             // save the settings on this state change, because hidden windows gets no window placements
             // all the saving stuff could be so much easier with ReactiveUI :-D
@@ -78,7 +84,7 @@ namespace MahApps.Metro.Behaviors
         private void CleanUp(string fromWhere)
         {
             var window = this.AssociatedObject;
-            if (null == window)
+            if (window is null)
             {
                 // it's bad if the associated object is null, so trace this here
                 Trace.TraceWarning($"{this}: Can not clean up {fromWhere}, cause the AssociatedObject is null. This can maybe happen if this Behavior was already detached.");
@@ -93,20 +99,26 @@ namespace MahApps.Metro.Behaviors
             window.SourceInitialized -= this.AssociatedObject_SourceInitialized;
 
             // This operation must be thread safe
-            Application.Current?.Invoke(() => Application.Current.SessionEnding -= this.CurrentApplicationSessionEnding);
+            Application.Current?.BeginInvoke(app =>
+                {
+                    if (app != null)
+                    {
+                        app.SessionEnding -= this.CurrentApplicationSessionEnding;
+                    }
+                });
         }
 
 #pragma warning disable 618
         private void LoadWindowState()
         {
             var window = this.AssociatedObject;
-            if (null == window)
+            if (window is null)
             {
                 return;
             }
 
             var settings = window.GetWindowPlacementSettings();
-            if (null == settings || !window.SaveWindowPosition)
+            if (settings is null || !window.SaveWindowPosition)
             {
                 return;
             }
@@ -122,7 +134,7 @@ namespace MahApps.Metro.Behaviors
             }
 
             // check for existing placement and prevent empty bounds
-            if (null == settings.Placement || settings.Placement.normalPosition.IsEmpty)
+            if (settings.Placement is null || settings.Placement.normalPosition.IsEmpty)
             {
                 return;
             }
@@ -137,8 +149,8 @@ namespace MahApps.Metro.Behaviors
                 window.Left = wp.normalPosition.Left;
                 window.Top = wp.normalPosition.Top;
 
-                var hwnd = new WindowInteropHelper(window).Handle;
-                if (!NativeMethods.SetWindowPlacement(hwnd, wp))
+                var windowHandle = new WindowInteropHelper(window).Handle;
+                if (!NativeMethods.SetWindowPlacement(windowHandle, wp))
                 {
                     Trace.TraceWarning($"{this}: The WINDOWPLACEMENT {wp} could not be set by SetWindowPlacement.");
                 }
@@ -152,27 +164,34 @@ namespace MahApps.Metro.Behaviors
         private void SaveWindowState()
         {
             var window = this.AssociatedObject;
-            if (null == window)
+            if (window is null)
             {
                 return;
             }
 
             var settings = window.GetWindowPlacementSettings();
-            if (null == settings || !window.SaveWindowPosition)
+            if (settings is null || !window.SaveWindowPosition)
             {
                 return;
             }
 
-            var hwnd = new WindowInteropHelper(window).Handle;
-            var wp = NativeMethods.GetWindowPlacement(hwnd);
+            var windowHandle = new WindowInteropHelper(window).Handle;
+            var wp = NativeMethods.GetWindowPlacement(windowHandle);
+
             // check for saveable values
             if (wp.showCmd != SW.HIDE && wp.length > 0)
             {
                 if (wp.showCmd == SW.NORMAL)
                 {
-                    RECT rect;
-                    if (UnsafeNativeMethods.GetWindowRect(hwnd, out rect))
+                    if (UnsafeNativeMethods.GetWindowRect(windowHandle, out var rect))
                     {
+                        var monitor = NativeMethods.MonitorFromWindow(windowHandle, MonitorOptions.MONITOR_DEFAULTTONEAREST);
+                        if (monitor != IntPtr.Zero)
+                        {
+                            var monitorInfo = NativeMethods.GetMonitorInfo(monitor);
+                            rect.Offset(monitorInfo.rcMonitor.Left - monitorInfo.rcWork.Left, monitorInfo.rcMonitor.Top - monitorInfo.rcWork.Top);
+                        }
+
                         wp.normalPosition = rect;
                     }
                 }
