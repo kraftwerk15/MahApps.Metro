@@ -13,7 +13,7 @@ using MahApps.Metro.Controls;
 using MahApps.Metro.Tests.TestHelpers;
 using Xunit;
 
-namespace MahApps.Metro.Tests
+namespace MahApps.Metro.Tests.Tests
 {
     public class NumericUpDownTests : AutomationTestBase, IClassFixture<NumericUpDownFixture>
     {
@@ -86,9 +86,9 @@ namespace MahApps.Metro.Tests
         [InlineData(0.25d, "{0:0.0000}%", "0.2500%")] // 3376 Case 3
         [InlineData(0.25d, "{}{0:0.00000}‰", "0.25000‰")] // 3376 Case 4
         [InlineData(0.25d, "{0:0.00000}‰", "0.25000‰")] // 3376 Case 4
-        [InlineData(0.25d, "{}{0:P}", "25.00%")] // 3376 Case 5
-        [InlineData(0.25d, "{0:P}", "25.00%")] // 3376 Case 5
-        [InlineData(0.25d, "P", "25.00%")] // 3376 Case 5
+        [InlineData(0.25d, "{}{0:P}", "25.00 %")] // 3376 Case 5
+        [InlineData(0.25d, "{0:P}", "25.00 %")] // 3376 Case 5
+        [InlineData(0.25d, "P", "25.00 %")] // 3376 Case 5
         [InlineData(123456789d, "X", "75BCD15")]
         [InlineData(123456789d, "X2", "75BCD15")]
         [InlineData(255d, "X", "FF")]
@@ -101,6 +101,7 @@ namespace MahApps.Metro.Tests
             await this.fixture.PrepareForTestAsync().ConfigureAwait(false);
             await TestHost.SwitchToAppThread();
 
+            this.fixture.Window.TheNUD.Culture = CultureInfo.InvariantCulture;
             this.fixture.Window.TheNUD.NumericInputMode = NumericInput.All;
             this.fixture.Window.TheNUD.StringFormat = format;
 
@@ -330,6 +331,46 @@ namespace MahApps.Metro.Tests
             textCompositionEventArgs.RoutedEvent = UIElement.TextInputEvent;
             theTextBox.RaiseEvent(textCompositionEventArgs);
             theTextBox.RaiseEvent(new RoutedEventArgs(UIElement.LostFocusEvent));
+        }
+
+        [Fact]
+        public async Task ShouldSetDefaultValue()
+        {
+            // Prepare
+            await this.fixture.PrepareForTestAsync().ConfigureAwait(true);
+            await TestHost.SwitchToAppThread();
+
+            var nud = this.fixture.Window.TheNUD;
+            nud.Minimum = 0;
+            nud.Maximum = 10;
+
+            // 1. Test: The default value must be set here. Let's check this.
+
+            nud.DefaultValue = 1;
+            nud.Value = null;
+
+            Assert.Equal(nud.Value, nud.DefaultValue);
+
+            // 2. Test: There is no default value, so we should be able to set it to null
+
+            nud.DefaultValue = null;
+            nud.Value = null;
+
+            Assert.Equal(nud.Value, nud.DefaultValue);
+
+            // 3. Test: We set the Default Value greater than the Maximum. It should be corrected by the control
+            nud.DefaultValue = 100;
+            nud.Value = null;
+
+            Assert.Equal(nud.Maximum, nud.DefaultValue);
+            Assert.Equal(nud.Maximum, nud.Value);
+
+            // 4. Test: We set the Default Value lower than the Minimum. It should be corrected by the control
+            nud.DefaultValue = -100;
+            nud.Value = null;
+
+            Assert.Equal(nud.Minimum, nud.DefaultValue);
+            Assert.Equal(nud.Minimum, nud.Value);
         }
     }
 }

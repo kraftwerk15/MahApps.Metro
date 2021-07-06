@@ -13,7 +13,7 @@ using System.Windows.Controls.Primitives;
 namespace MahApps.Metro.Controls
 {
     /// <summary>
-    /// Defines a helper class for selected items binding on collections with multiselector elements
+    /// Defines a helper class for selected items binding on <see cref="ListBox"/> or <see cref="MultiSelector"/> controls.
     /// </summary>
     public static class MultiSelectorHelper
     {
@@ -29,16 +29,26 @@ namespace MahApps.Metro.Controls
         /// </summary>
         private static void OnSelectedItemsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (!(d is ListBox || d is MultiSelector)) throw new ArgumentException("The property 'SelectedItems' may only be set on ListBox or MultiSelector elements.");
+            if (!(d is ListBox || d is MultiSelector))
+            {
+                throw new ArgumentException("The property 'SelectedItems' may only be set on ListBox or MultiSelector elements.");
+            }
 
             if (e.OldValue != e.NewValue)
             {
                 var oldBinding = GetSelectedItemBinding(d);
                 oldBinding?.UnBind();
 
-                var multiSelectorBinding = new MultiSelectorBinding((Selector)d, (IList)e.NewValue);
-                SetSelectedItemBinding(d, multiSelectorBinding);
-                multiSelectorBinding.Bind();
+                if (e.NewValue is IList newList)
+                {
+                    var multiSelectorBinding = new MultiSelectorBinding((Selector)d, newList);
+                    SetSelectedItemBinding(d, multiSelectorBinding);
+                    multiSelectorBinding.Bind();
+                }
+                else
+                {
+                    SetSelectedItemBinding((Selector)d, null);
+                }
             }
         }
 
@@ -48,9 +58,9 @@ namespace MahApps.Metro.Controls
         [Category(AppName.MahApps)]
         [AttachedPropertyBrowsableForType(typeof(ListBox))]
         [AttachedPropertyBrowsableForType(typeof(MultiSelector))]
-        public static IList GetSelectedItems(DependencyObject element)
+        public static IList? GetSelectedItems(DependencyObject element)
         {
-            return (IList)element.GetValue(SelectedItemsProperty);
+            return (IList?)element.GetValue(SelectedItemsProperty);
         }
 
         /// <summary>
@@ -59,7 +69,7 @@ namespace MahApps.Metro.Controls
         [Category(AppName.MahApps)]
         [AttachedPropertyBrowsableForType(typeof(ListBox))]
         [AttachedPropertyBrowsableForType(typeof(MultiSelector))]
-        public static void SetSelectedItems(DependencyObject element, IList value)
+        public static void SetSelectedItems(DependencyObject element, IList? value)
         {
             element.SetValue(SelectedItemsProperty, value);
         }
@@ -75,17 +85,17 @@ namespace MahApps.Metro.Controls
         /// </summary>
         [AttachedPropertyBrowsableForType(typeof(ListBox))]
         [AttachedPropertyBrowsableForType(typeof(MultiSelector))]
-        private static MultiSelectorBinding GetSelectedItemBinding(DependencyObject element)
+        private static MultiSelectorBinding? GetSelectedItemBinding(DependencyObject element)
         {
-            return (MultiSelectorBinding)element.GetValue(SelectedItemBindingProperty);
+            return (MultiSelectorBinding?)element.GetValue(SelectedItemBindingProperty);
         }
 
         /// <summary>
-        /// Sets the <see cref="MultiSelectorBinding"/> for a bining
+        /// Sets the <see cref="MultiSelectorBinding"/> for a binding
         /// </summary>
         [AttachedPropertyBrowsableForType(typeof(ListBox))]
         [AttachedPropertyBrowsableForType(typeof(MultiSelector))]
-        private static void SetSelectedItemBinding(DependencyObject element, MultiSelectorBinding value)
+        private static void SetSelectedItemBinding(DependencyObject element, MultiSelectorBinding? value)
         {
             element.SetValue(SelectedItemBindingProperty, value);
         }
@@ -105,8 +115,8 @@ namespace MahApps.Metro.Controls
             /// <param name="collection">The bound collection</param>
             public MultiSelectorBinding(Selector selector, IList collection)
             {
-                _selector = selector;
-                _collection = collection;
+                this._selector = selector;
+                this._collection = collection;
 
                 if (selector is ListBox listbox)
                 {
@@ -116,7 +126,7 @@ namespace MahApps.Metro.Controls
                         listbox.SelectedItems.Add(newItem);
                     }
                 }
-                else if (_selector is MultiSelector multiSelector)
+                else if (this._selector is MultiSelector multiSelector)
                 {
                     multiSelector.SelectedItems.Clear();
                     foreach (var newItem in collection)
@@ -132,22 +142,22 @@ namespace MahApps.Metro.Controls
             public void Bind()
             {
                 // prevent multiple event registration
-                UnBind();
+                this.UnBind();
 
-                _selector.SelectionChanged += OnSelectionChanged;
-                if (_collection is INotifyCollectionChanged notifyCollection)
+                this._selector.SelectionChanged += this.OnSelectionChanged;
+                if (this._collection is INotifyCollectionChanged notifyCollection)
                 {
                     notifyCollection.CollectionChanged += this.OnCollectionChanged;
                 }
             }
 
             /// <summary>
-            /// Unregisters the event handlers for selector and collection changes
+            /// Clear the event handlers for selector and collection changes
             /// </summary>
             public void UnBind()
             {
-                _selector.SelectionChanged -= OnSelectionChanged;
-                if (_collection is INotifyCollectionChanged notifyCollection)
+                this._selector.SelectionChanged -= this.OnSelectionChanged;
+                if (this._collection is INotifyCollectionChanged notifyCollection)
                 {
                     notifyCollection.CollectionChanged -= this.OnCollectionChanged;
                 }
@@ -158,7 +168,7 @@ namespace MahApps.Metro.Controls
             /// </summary>
             private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
             {
-                var notifyCollection = _collection as INotifyCollectionChanged;
+                var notifyCollection = this._collection as INotifyCollectionChanged;
                 if (notifyCollection != null)
                 {
                     notifyCollection.CollectionChanged -= this.OnCollectionChanged;
@@ -168,12 +178,12 @@ namespace MahApps.Metro.Controls
                 {
                     foreach (var oldItem in e.RemovedItems)
                     {
-                        _collection.Remove(oldItem);
+                        this._collection.Remove(oldItem);
                     }
 
                     foreach (var newItem in e.AddedItems)
                     {
-                        _collection.Add(newItem);
+                        this._collection.Add(newItem);
                     }
                 }
                 finally
@@ -188,27 +198,37 @@ namespace MahApps.Metro.Controls
             /// <summary>
             /// Updates the selector with changes made in the collection
             /// </summary>
+#if NET5_0_OR_GREATER
+            private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+#else
             private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+#endif
             {
-                _selector.SelectionChanged -= OnSelectionChanged;
+                this._selector.SelectionChanged -= this.OnSelectionChanged;
 
                 try
                 {
-                    if (_selector is ListBox listBox)
+                    if (this._selector is ListBox listBox)
                     {
                         switch (e.Action)
                         {
                             case NotifyCollectionChangedAction.Add:
-                                foreach (var newItem in e.NewItems)
+                                if (e.NewItems is not null)
                                 {
-                                    listBox.SelectedItems.Add(newItem);
+                                    foreach (var newItem in e.NewItems)
+                                    {
+                                        listBox.SelectedItems.Add(newItem);
+                                    }
                                 }
 
                                 break;
                             case NotifyCollectionChangedAction.Remove:
-                                foreach (var oldItem in e.OldItems)
+                                if (e.OldItems is not null)
                                 {
-                                    listBox.SelectedItems.Remove(oldItem);
+                                    foreach (var oldItem in e.OldItems)
+                                    {
+                                        listBox.SelectedItems.Remove(oldItem);
+                                    }
                                 }
 
                                 break;
@@ -222,21 +242,27 @@ namespace MahApps.Metro.Controls
                                 break;
                         }
                     }
-                    else if (_selector is MultiSelector multiSelector)
+                    else if (this._selector is MultiSelector multiSelector)
                     {
                         switch (e.Action)
                         {
                             case NotifyCollectionChangedAction.Add:
-                                foreach (var newItem in e.NewItems)
+                                if (e.NewItems is not null)
                                 {
-                                    multiSelector.SelectedItems.Add(newItem);
+                                    foreach (var newItem in e.NewItems)
+                                    {
+                                        multiSelector.SelectedItems.Add(newItem);
+                                    }
                                 }
 
                                 break;
                             case NotifyCollectionChangedAction.Remove:
-                                foreach (var oldItem in e.OldItems)
+                                if (e.OldItems is not null)
                                 {
-                                    multiSelector.SelectedItems.Remove(oldItem);
+                                    foreach (var oldItem in e.OldItems)
+                                    {
+                                        multiSelector.SelectedItems.Remove(oldItem);
+                                    }
                                 }
 
                                 break;
@@ -253,37 +279,43 @@ namespace MahApps.Metro.Controls
                 }
                 finally
                 {
-                    _selector.SelectionChanged += OnSelectionChanged;
+                    this._selector.SelectionChanged += this.OnSelectionChanged;
                 }
             }
 
-            private static void RemoveItems(IList list, NotifyCollectionChangedEventArgs e)
+            private static void RemoveItems(IList? list, NotifyCollectionChangedEventArgs e)
             {
-                var itemCount = e.OldItems.Count;
-
-                // For the number of items being removed, remove the item from the old starting index
-                // (this will cause following items to be shifted down to fill the hole).
-                for (var i = 0; i < itemCount; i++)
+                if (e.OldItems is not null && list is not null)
                 {
-                    list.RemoveAt(e.OldStartingIndex);
-                }
-            }
+                    var itemCount = e.OldItems.Count;
 
-            private static void AddItems(IList list, NotifyCollectionChangedEventArgs e)
-            {
-                var itemCount = e.NewItems.Count;
-
-                for (var i = 0; i < itemCount; i++)
-                {
-                    var insertionPoint = e.NewStartingIndex + i;
-
-                    if (insertionPoint > list.Count)
+                    // For the number of items being removed, remove the item from the old starting index
+                    // (this will cause following items to be shifted down to fill the hole).
+                    for (var i = 0; i < itemCount; i++)
                     {
-                        list.Add(e.NewItems[i]);
+                        list.RemoveAt(e.OldStartingIndex);
                     }
-                    else
+                }
+            }
+
+            private static void AddItems(IList? list, NotifyCollectionChangedEventArgs e)
+            {
+                if (e.NewItems is not null && list is not null)
+                {
+                    var itemCount = e.NewItems.Count;
+
+                    for (var i = 0; i < itemCount; i++)
                     {
-                        list.Insert(insertionPoint, e.NewItems[i]);
+                        var insertionPoint = e.NewStartingIndex + i;
+
+                        if (insertionPoint > list.Count)
+                        {
+                            list.Add(e.NewItems[i]);
+                        }
+                        else
+                        {
+                            list.Insert(insertionPoint, e.NewItems[i]);
+                        }
                     }
                 }
             }

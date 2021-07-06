@@ -36,14 +36,14 @@ namespace MahApps.Metro.Behaviors
             base.OnDetaching();
         }
 
-        protected override void AssociatedObject_Loaded(object sender, RoutedEventArgs e)
+        protected override void AssociatedObject_Loaded(object? sender, RoutedEventArgs e)
         {
             if (sender is MetroWindow window)
             {
+                window.SetIsHitTestVisibleInChromeProperty<UIElement>("PART_Icon");
+
                 if (window.ResizeMode != ResizeMode.NoResize)
                 {
-                    //window.SetIsHitTestVisibleInChromeProperty<Border>("PART_Border");
-                    window.SetIsHitTestVisibleInChromeProperty<UIElement>("PART_Icon");
                     window.SetWindowChromeResizeGripDirection("WindowResizeGrip", ResizeGripDirection.BottomRight);
                 }
             }
