@@ -46,8 +46,14 @@ namespace MahApps.Metro.Behaviors
             window.Closing += this.AssociatedObject_Closing;
             window.Closed += this.AssociatedObject_Closed;
 
-            // This operation must be thread safe
-            Application.Current?.Invoke(() => Application.Current.SessionEnding += this.CurrentApplicationSessionEnding);
+            // This operation must be thread safe. It is possible, that the window is running in a different Thread.
+            Application.Current?.BeginInvoke(app =>
+                {
+                    if (app != null)
+                    {
+                        app.SessionEnding += this.CurrentApplicationSessionEnding;
+                    }
+                });
         }
 
         private void AssociatedObject_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -93,7 +99,13 @@ namespace MahApps.Metro.Behaviors
             window.SourceInitialized -= this.AssociatedObject_SourceInitialized;
 
             // This operation must be thread safe
-            Application.Current?.Invoke(() => Application.Current.SessionEnding -= this.CurrentApplicationSessionEnding);
+            Application.Current?.BeginInvoke(app =>
+                {
+                    if (app != null)
+                    {
+                        app.SessionEnding -= this.CurrentApplicationSessionEnding;
+                    }
+                });
         }
 
 #pragma warning disable 618
@@ -173,6 +185,13 @@ namespace MahApps.Metro.Behaviors
                     RECT rect;
                     if (UnsafeNativeMethods.GetWindowRect(hwnd, out rect))
                     {
+                        var monitor = NativeMethods.MonitorFromWindow(hwnd, MonitorOptions.MONITOR_DEFAULTTONEAREST);
+                        if (monitor != IntPtr.Zero)
+                        {
+                            var monitorInfo = NativeMethods.GetMonitorInfo(monitor);
+                            rect.Offset(monitorInfo.rcMonitor.Left - monitorInfo.rcWork.Left, monitorInfo.rcMonitor.Top - monitorInfo.rcWork.Top);
+                        }
+
                         wp.normalPosition = rect;
                     }
                 }

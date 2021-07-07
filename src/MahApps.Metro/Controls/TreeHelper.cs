@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
@@ -55,6 +56,47 @@ namespace MahApps.Metro.Controls
                 yield return parent;
                 parent = VisualTreeHelper.GetParent(parent);
             }
+        }
+
+        /// <summary>
+        /// Returns full visual ancestry, starting at the leaf.
+        /// <para>If element is not of <see cref="Visual"/> or <see cref="Visual3D"/> the logical ancestry is used.</para>
+        /// </summary>
+        /// <param name="leaf">The starting object.</param>
+        /// <returns></returns>
+        public static IEnumerable<DependencyObject> GetVisualAncestry(this DependencyObject? leaf)
+        {
+            while (leaf != null)
+            {
+                yield return leaf;
+                leaf = leaf is Visual || leaf is Visual3D
+                    ? VisualTreeHelper.GetParent(leaf)
+                    : LogicalTreeHelper.GetParent(leaf);
+            }
+        }
+
+        /// <summary>
+        /// Tries to find and returns a visual ancestor, starting at the leaf.
+        /// <para>If element is not of <see cref="Visual"/> or <see cref="Visual3D"/> the logical ancestry is used.</para>
+        /// </summary>
+        /// <param name="leaf">The starting object.</param>
+        /// <returns></returns>
+        public static T GetVisualAncestor<T>(this DependencyObject? leaf)
+            where T : DependencyObject
+        {
+            while (leaf != null)
+            {
+                if (leaf is T ancestor)
+                {
+                    return ancestor;
+                }
+
+                leaf = leaf is Visual || leaf is Visual3D
+                    ? VisualTreeHelper.GetParent(leaf)
+                    : LogicalTreeHelper.GetParent(leaf);
+            }
+
+            return default(T);
         }
 
         /// <summary>
@@ -263,6 +305,45 @@ namespace MahApps.Metro.Controls
             }
 
             return TryFindParent<T>(element);
+        }
+
+        public static bool IsDescendantOf(this DependencyObject node, DependencyObject reference)
+        {
+            bool success = false;
+
+            DependencyObject curr = node;
+
+            while (curr != null)
+            {
+                if (curr == reference)
+                {
+                    success = true;
+                    break;
+                }
+
+                if (curr is Popup popup)
+                {
+                    curr = popup;
+
+                    if (popup != null)
+                    {
+                        // Try the poup Parent
+                        curr = popup.Parent;
+
+                        // Otherwise fall back to placement target
+                        if (curr == null)
+                        {
+                            curr = popup.PlacementTarget;
+                        }
+                    }
+                }
+                else // Otherwise walk tree
+                {
+                    curr = curr.GetParentObject();
+                }
+            }
+
+            return success;
         }
     }
 }
