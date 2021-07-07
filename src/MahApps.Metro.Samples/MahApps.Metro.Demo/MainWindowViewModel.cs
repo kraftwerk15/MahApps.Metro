@@ -91,9 +91,9 @@ namespace MetroDemo
 
             this.FlipViewImages = new Uri[]
                                   {
-                                      new Uri("pack://application:,,,/MahApps.Metro.Demo;component/Assets/Photos/Home.jpg", UriKind.RelativeOrAbsolute),
-                                      new Uri("pack://application:,,,/MahApps.Metro.Demo;component/Assets/Photos/Privat.jpg", UriKind.RelativeOrAbsolute),
-                                      new Uri("pack://application:,,,/MahApps.Metro.Demo;component/Assets/Photos/Settings.jpg", UriKind.RelativeOrAbsolute)
+                                      new Uri("pack://application:,,,/kraftwerk.MahApps.Metro.Demo;component/Assets/Photos/Home.jpg", UriKind.RelativeOrAbsolute),
+                                      new Uri("pack://application:,,,/kraftwerk.MahApps.Metro.Demo;component/Assets/Photos/Privat.jpg", UriKind.RelativeOrAbsolute),
+                                      new Uri("pack://application:,,,/kraftwerk.MahApps.Metro.Demo;component/Assets/Photos/Settings.jpg", UriKind.RelativeOrAbsolute)
                                   };
 
             this.BrushResources = this.FindBrushResources();

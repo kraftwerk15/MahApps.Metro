@@ -701,8 +701,8 @@ namespace MahApps.Metro.Controls
         /// </summary>
         public Brush NonActiveGlowBrush
         {
-            get { return (Brush)GetValue(NonActiveGlowBrushProperty); }
-            set { SetValue(NonActiveGlowBrushProperty, value); }
+            get => (Brush)GetValue(NonActiveGlowBrushProperty);
+            set => SetValue(NonActiveGlowBrushProperty, value);
         }
 
         /// <summary>
@@ -710,8 +710,8 @@ namespace MahApps.Metro.Controls
         /// </summary>
         public Brush NonActiveBorderBrush
         {
-            get { return (Brush)GetValue(NonActiveBorderBrushProperty); }
-            set { SetValue(NonActiveBorderBrushProperty, value); }
+            get => (Brush)GetValue(NonActiveBorderBrushProperty);
+            set => SetValue(NonActiveBorderBrushProperty, value);
         }
 
         /// <summary>

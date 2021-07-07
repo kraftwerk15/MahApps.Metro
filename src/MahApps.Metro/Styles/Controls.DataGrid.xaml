@@ -3,11 +3,11 @@
                     xmlns:mah="clr-namespace:MahApps.Metro.Controls">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.CheckBox.xaml" />
-        <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.ComboBox.xaml" />
-        <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.TextBlock.xaml" />
-        <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.TextBox.xaml" />
-        <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.Expander.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/kraftwerk.MahApps.Metro;component/Styles/Controls.CheckBox.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/kraftwerk.MahApps.Metro;component/Styles/Controls.ComboBox.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/kraftwerk.MahApps.Metro;component/Styles/Controls.TextBlock.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/kraftwerk.MahApps.Metro;component/Styles/Controls.TextBox.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/kraftwerk.MahApps.Metro;component/Styles/Controls.Expander.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />

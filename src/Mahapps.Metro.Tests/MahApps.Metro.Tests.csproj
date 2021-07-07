@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
     <!-- Project properties -->
     <PropertyGroup>
-        <AssemblyName>MahApps.Metro.Tests</AssemblyName>
+        <AssemblyName>kraftwerk.MahApps.Metro.Tests</AssemblyName>
         <RootNamespace>MahApps.Metro.Tests</RootNamespace>
         <!-- Workaround for https://github.com/dotnet/sourcelink/issues/91 -->
         <DeterministicSourcePaths Condition="'$(EnableSourceLink)' == ''">false</DeterministicSourcePaths>

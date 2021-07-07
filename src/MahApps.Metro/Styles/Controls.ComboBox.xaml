@@ -4,7 +4,7 @@
                     xmlns:Converters="clr-namespace:MahApps.Metro.Converters">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.TextBox.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/kraftwerk.MahApps.Metro;component/Styles/Controls.TextBox.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <Thickness x:Key="ComboBoxBorderThemeThickness">1</Thickness>
